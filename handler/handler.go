@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/antiloger/nhostel-go/config"
+	"github.com/antiloger/nhostel-go/database"
 	"github.com/antiloger/nhostel-go/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -19,7 +21,6 @@ func Login(c *fiber.Ctx) error {
 
 	if loginreq.Email == "test" || loginreq.Password == "test" {
 		u := models.User{
-			ID:       1,
 			Email:    loginreq.Email,
 			Password: loginreq.Password,
 			Role:     "admin",
@@ -51,6 +52,37 @@ func Login(c *fiber.Ctx) error {
 			"error": "Email and Password required",
 		})
 	}
+}
+
+func Insertuser(c *fiber.Ctx) error {
+	db_i := database.Connect()
+	db := db_i.Db
+	user := new(models.User)
+	fmt.Println("user aca;;", db)
+	err := c.BodyParser(user)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Somthing's wrong with your input", "data": err})
+	}
+
+	err = db.Create(&user).Error
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "could not created the user", "data": err})
+	}
+
+	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "user has created", "data": user})
+}
+
+func Getusers(c *fiber.Ctx) error {
+	db := database.DB.Db
+	var users []models.User
+
+	db.Find(&users)
+
+	if len(users) == 0 {
+		return c.Status(404).JSON(fiber.Map{"status": "error"})
+	}
+
+	return c.Status(200).JSON(fiber.Map{"data": users})
 }
 
 func Hello(c *fiber.Ctx) error {

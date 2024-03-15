@@ -16,9 +16,11 @@ func main() {
 	app.Use(jwtware.New(jwtware.Config{
 		SigningKey: jwtware.SigningKey{Key: []byte(config.Jwt_Secret)},
 	}))
-
+	app.Get("/atest", handler.Authtest)
+	app.Post("/users", handler.Insertuser)
+	app.Get("/allusers", handler.Getusers)
 	app.Get("/home", handler.HomeLoad)
-	app.Get("/authtest", handler.Authtest)
+	app.Get("/homeloc", handler.HomeLoadloc)
 
 	app.Listen(":3000")
 }

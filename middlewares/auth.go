@@ -1,7 +1,11 @@
 package middlewares
 
 import (
+	"errors"
+
 	"github.com/antiloger/nhostel-go/config"
+	"github.com/antiloger/nhostel-go/database"
+	"github.com/antiloger/nhostel-go/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -40,4 +44,21 @@ func RoleMiddleware(role string) fiber.Handler {
 
 		return c.Next()
 	}
+}
+
+func CheckLogin(email string, password string) (*models.UserInfo, error) {
+	db := database.DB.Db
+	var user models.UserInfo
+
+	db.Find(&user, "email = ?", email)
+
+	if user.ID == 0 {
+		return nil, errors.New("user not found")
+	}
+
+	if user.Password != password {
+		return nil, errors.New("invalid password")
+	}
+
+	return &user, nil
 }

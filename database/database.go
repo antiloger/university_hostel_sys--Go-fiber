@@ -17,9 +17,9 @@ type DBintance struct {
 
 var DB DBintance
 
-func Connect() DBintance {
+func Connect() {
 	fmt.Print("dbf")
-	dsn := "host=localhost user=postgres password=7913456 dbname=teledata port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+	dsn := "host=localhost user=postgres password=7913knp7913 dbname=test1 port=5433 sslmode=disable TimeZone=Asia/Shanghai"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
@@ -30,11 +30,9 @@ func Connect() DBintance {
 
 	log.Println("[Info] Connected")
 	db.Logger = logger.Default.LogMode(logger.Info)
-	db.AutoMigrate(&models.User{})
+	db.AutoMigrate(&models.UserInfo{}, &models.Hostel{}, &models.Student{}, &models.HostelOwner{}, &models.Booking{}, &models.Admin{})
 
 	DB = DBintance{
 		Db: db,
 	}
-
-	return DB
 }

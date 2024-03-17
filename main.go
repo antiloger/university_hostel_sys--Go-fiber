@@ -1,26 +1,23 @@
 package main
 
 import (
-	"github.com/antiloger/nhostel-go/config"
-	"github.com/antiloger/nhostel-go/handler"
-	jwtware "github.com/gofiber/contrib/jwt"
+	"github.com/antiloger/nhostel-go/database"
+	"github.com/antiloger/nhostel-go/routers"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 func main() {
+	database.Connect()
+
 	app := fiber.New()
 
-	app.Get("/", handler.Hello)
-	app.Post("/login", handler.Login)
+	// middlewares
+	app.Use(logger.New())
+	app.Use(cors.New())
 
-	app.Use(jwtware.New(jwtware.Config{
-		SigningKey: jwtware.SigningKey{Key: []byte(config.Jwt_Secret)},
-	}))
-	app.Get("/atest", handler.Authtest)
-	app.Post("/users", handler.Insertuser)
-	app.Get("/allusers", handler.Getusers)
-	app.Get("/home", handler.HomeLoad)
-	app.Get("/homeloc", handler.HomeLoadloc)
+	routers.RegisterRoutes(app)
 
 	app.Listen(":3000")
 }

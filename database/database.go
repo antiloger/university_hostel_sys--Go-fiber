@@ -19,7 +19,7 @@ var DB DBintance
 
 func Connect() {
 	fmt.Print("dbf")
-	dsn := "host=localhost user=postgres password=7913knp7913 dbname=test1 port=5433 sslmode=disable TimeZone=Asia/Shanghai"
+	dsn := "host=localhost user=postgres password=7913456 dbname=top port=5432 sslmode=disable TimeZone=Asia/Shanghai"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})

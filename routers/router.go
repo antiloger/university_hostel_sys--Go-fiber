@@ -11,6 +11,7 @@ func RegisterRoutes(App *fiber.App) {
 	student_route := App.Group("/student")
 	owner_route := App.Group("/owner")
 	admin_route := App.Group("/admin")
+	warden_route := App.Group("/warden")
 
 	App.Get("/", handler.Hello)
 	App.Post("/login", handler.Login)
@@ -29,6 +30,7 @@ func RegisterRoutes(App *fiber.App) {
 
 	// home routes
 	home.Get("/", handler.HomeLoad)
+	home.Get("/search", handler.SearchHostel)
 
 	// owner routes
 	owner_route.Get("/:ID", handler.HostelOwnerView)
@@ -40,15 +42,21 @@ func RegisterRoutes(App *fiber.App) {
 	hostel_route.Delete("/:ID", handler.Hosteldelete)
 	hostel_route.Put("/available/:ID", handler.HostelAvailableUpdate)
 
-	// admin routes
-	admin_route.Get("/hostelapprovaltable", handler.HostelApproveTable)
-	admin_route.Put("/hostelapproval/:ID", handler.HostelApprove)
+	// wardens routes
+	warden_route.Get("/hostelapprovaltable", handler.HostelApproveTable)
+	warden_route.Put("/hostelapproval/:ID", handler.HostelApprove)
 
+	// admin routes
 	admin_route.Get("/studentapprovaltable", handler.StudentApproveTable)
 	admin_route.Put("/studentapproval/:ID", handler.StudentApprove)
 
 	admin_route.Get("/ownerapprovaltable", handler.HostelOwnerApproveTable)
 	admin_route.Put("/ownerapproval/:ID", handler.OwnerApprove)
+
+	admin_route.Post("/addarticle", handler.CreateArticle)
+	admin_route.Get("/article", handler.GetArticles)
+	admin_route.Get("/article/:ID", handler.GetArticle)
+	admin_route.Delete("/article/:ID", handler.DeleteArticle)
 
 	App.Post("/users", handler.Insertuser)
 }

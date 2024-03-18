@@ -87,6 +87,25 @@ type Admin struct {
 	UserID    uint   `json:"userid"`
 }
 
+type Warden struct {
+	gorm.Model
+	ID         uint   `gorm:"primaryKey" json:"id"`
+	WardenName string `json:"wardenname"`
+	PhoneNo    string `json:"phoneno"`
+	NIC        string `json:"nic"`
+	Image      string `json:"image"`
+	UserID     uint   `json:"userid"`
+}
+
+type Article struct {
+	gorm.Model
+	ID          uint   `gorm:"primaryKey" json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	PostedAt    string `json:"postedat"`
+	PostedBy    string `json:"postedby"`
+}
+
 // internal struct
 
 type StudentSingup struct {
@@ -134,4 +153,19 @@ type OwnerView struct {
 	Email     string   `json:"email"`
 	Approved  bool     `json:"approved"`
 	Hostels   []Hostel `json:"hostels"`
+}
+
+type WardenSingup struct {
+	WardenName string `json:"wardenname"`
+	PhoneNo    string `json:"phoneno"`
+	NIC        string `json:"nic"`
+	Email      string `json:"email"`
+	Password   string `json:"password"`
+	Image      string `json:"image"`
+}
+
+type AddArticle struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	PostedBy    string `json:"postedby"`
 }

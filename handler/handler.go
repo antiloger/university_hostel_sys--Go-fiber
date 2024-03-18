@@ -87,8 +87,19 @@ func HomeLoad(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"status": "success", "message": "hostels has found", "data": hostels})
 }
 
-func Search(c *fiber.Ctx) error {
-	return c.SendString("Hello, World!")
+func SearchHostel(c *fiber.Ctx) error {
+	db := database.DB.Db
+	hostels := []models.Hostel{}
+	search := c.Query("search")
+	if err := db.Where("hostel_name LIKE ?", "%"+search+"%").Or("address Like ?", "%"+search+"%").Find(&hostels).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not find the hostels", "data": err})
+	}
+
+	if len(hostels) == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"status": "error", "message": "hostels not found", "data": nil})
+	}
+
+	return c.JSON(fiber.Map{"status": "success", "message": "hostels has found", "data": hostels})
 }
 
 func Hosteldetails(c *fiber.Ctx) error {
@@ -215,6 +226,45 @@ func HostelOwnerView(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"status": "success", "message": "hostel owner has found", "data": ownerview})
+}
+
+// user: warden handler
+
+func Wardensignup(c *fiber.Ctx) error {
+	db := database.DB.Db
+	warden_sign := new(models.WardenSingup)
+	err := c.BodyParser(warden_sign)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Somthing's wrong with your input", "data": err})
+	}
+
+	user := models.UserInfo{
+		Email:    warden_sign.Email,
+		Password: warden_sign.Password,
+		Role:     "warden",
+		Approved: false,
+	}
+
+	if err := db.Create(&user).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not created the user", "data": err})
+	}
+
+	warden := models.Warden{
+		WardenName: warden_sign.WardenName,
+		PhoneNo:    warden_sign.PhoneNo,
+		NIC:        warden_sign.NIC,
+		Image:      warden_sign.Image,
+		UserID:     user.ID,
+	}
+
+	if err := db.Create(&warden).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not created the warden", "data": err})
+	}
+
+	return c.JSON(fiber.Map{
+		"status":  "success",
+		"message": "warden has created",
+	})
 }
 
 // user: hostel handler
@@ -479,4 +529,60 @@ func HostelApprove(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "hostel has approved",
 	})
+}
+
+func CreateArticle(c *fiber.Ctx) error {
+	db := database.DB.Db
+	article := new(models.Article)
+	err := c.BodyParser(article)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Somthing's wrong with your input", "data": err})
+	}
+
+	if err := db.Create(&article).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "could not created the article", "data": err})
+	}
+
+	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "article has created", "data": article})
+}
+
+func GetArticles(c *fiber.Ctx) error {
+	db := database.DB.Db
+	articles := []models.Article{}
+	if err := db.Find(&articles).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not find the articles", "data": err})
+	}
+
+	return c.JSON(fiber.Map{"status": "success", "message": "articles has found", "data": articles})
+}
+
+func GetArticle(c *fiber.Ctx) error {
+	db := database.DB.Db
+	id, err := c.ParamsInt("ID")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": "error", "message": "invalid id", "data": err})
+	}
+	article := models.Article{}
+	if err := db.Where("id = ?", id).First(&article).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"status": "error", "message": "article not found", "data": err})
+	}
+	return c.JSON(fiber.Map{"status": "success", "message": "article has found", "data": article})
+}
+
+func DeleteArticle(c *fiber.Ctx) error {
+	db := database.DB.Db
+	id, err := c.ParamsInt("ID")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": "error", "message": "invalid id", "data": err})
+	}
+	var article models.Article
+
+	if err := db.Where("id = ?", id).First(&article).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"status": "error", "message": "article not found", "data": err})
+	}
+
+	if err := db.Delete(&article).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not delete the article", "data": err})
+	}
+	return c.JSON(fiber.Map{"status": "success", "message": "article has deleted"})
 }

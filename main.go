@@ -11,9 +11,14 @@ import (
 func main() {
 	database.Connect()
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		BodyLimit: 20 * 1024 * 1024,
+	})
+
+	app.Static("/uploads", "./uploads")
 
 	// middlewares
+
 	app.Use(logger.New())
 	app.Use(cors.New())
 

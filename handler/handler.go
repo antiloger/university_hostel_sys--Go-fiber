@@ -1,12 +1,16 @@
 package handler
 
 import (
+	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/antiloger/nhostel-go/config"
 	"github.com/antiloger/nhostel-go/database"
 	"github.com/antiloger/nhostel-go/middlewares"
 	"github.com/antiloger/nhostel-go/models"
+	"github.com/antiloger/nhostel-go/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -48,6 +52,7 @@ func Login(c *fiber.Ctx) error {
 
 	return c.JSON(models.LoginResponse{
 		Token: t,
+		Role:  user.Role,
 	})
 }
 
@@ -120,6 +125,7 @@ func Studentsignup(c *fiber.Ctx) error {
 	db := database.DB.Db
 	student_sign := new(models.StudentSingup)
 	err := c.BodyParser(student_sign)
+	fmt.Println(student_sign)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Somthing's wrong with your input", "data": err})
 	}
@@ -163,6 +169,21 @@ func Hostelownersignup(c *fiber.Ctx) error {
 	err := c.BodyParser(hostelowner_sign)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Somthing's wrong with your input", "data": err})
+	}
+
+	image, err := c.FormFile("image")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "could not get the image", "data": err})
+	}
+
+	if image.Size > 0 {
+		imagename := "./uploads/hostelowner" + hostelowner_sign.OwnerName + image.Filename
+
+		if err := c.SaveFile(image, imagename); err != nil {
+			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "could not save the image", "data": err})
+		}
+
+		hostelowner_sign.Image = imagename
 	}
 
 	user := models.UserInfo{
@@ -277,6 +298,19 @@ func Hostelcreate(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Somthing's wrong with your input", "data": err})
 	}
 
+	img1, err := c.FormFile("image1")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "could not get the image1", "data": err})
+	}
+	img2, err := c.FormFile("image2")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "could not get the image2", "data": err})
+	}
+	img3, err := c.FormFile("image3")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "could not get the image3", "data": err})
+	}
+
 	hostel := models.Hostel{
 		HostelName:   hostel_reg.HostelName,
 		Address:      hostel_reg.Address,
@@ -295,6 +329,32 @@ func Hostelcreate(c *fiber.Ctx) error {
 		NsbmApproved: false,
 		Available:    true,
 		Rating:       0,
+	}
+
+	if img1.Size > 0 || img2.Size > 0 || img3.Size > 0 {
+		imagefolder := fmt.Sprintf("./uploads/hostel/%s/", hostel_reg.HostelName)
+		err := os.Mkdir(imagefolder, 0755)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "could not create the image folder", "data": err})
+		}
+		img1path := imagefolder + img1.Filename
+		img2path := imagefolder + img2.Filename
+		img3path := imagefolder + img3.Filename
+
+		if err := c.SaveFile(img1, img1path); err != nil {
+			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "could not save the image1", "data": err})
+		}
+		if err := c.SaveFile(img2, img2path); err != nil {
+			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "could not save the image2", "data": err})
+		}
+
+		if err := c.SaveFile(img3, img3path); err != nil {
+			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "could not save the image3", "data": err})
+		}
+
+		hostel.Image1 = img1path
+		hostel.Image2 = img2path
+		hostel.Image3 = img3path
 	}
 
 	if err := db.Create(&hostel).Error; err != nil {
@@ -585,4 +645,37 @@ func DeleteArticle(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not delete the article", "data": err})
 	}
 	return c.JSON(fiber.Map{"status": "success", "message": "article has deleted"})
+}
+
+func GetMyProfile(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+	userID, role, err := util.ValidateTokenAndExtractClaims(tokenString)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid or expired JWT"})
+	}
+
+	if role == "hostelowner" {
+		db := database.DB.Db
+		owner := models.HostelOwner{}
+		if err := db.Table("hostel_owners").Joins("INNER JOIN user_infos ON hostel_owners.user_id = user_infos.id").Where("user_infos.id = ?", userID).First(&owner).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not find the hostel owner", "data": err})
+		}
+
+		return c.JSON(fiber.Map{"status": "success", "message": "hostel owner has found", "data": owner, "role": role})
+	} else if role == "warden" {
+		db := database.DB.Db
+		warden := models.Warden{}
+		if err := db.Table("wardens").Joins("INNER JOIN user_infos ON warden.user_id = user_infos.id").Where("user_infos.id = ?", userID).First(&warden).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not find the warden", "data": err})
+		}
+
+		return c.JSON(fiber.Map{"status": "success", "message": "warden has found", "data": warden, "role": role})
+	} else if role == "student" {
+		return c.JSON(fiber.Map{"status": "success", "message": "student has found", "data": nil, "role": role})
+	} else {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid role"})
+	}
+
 }

@@ -13,6 +13,7 @@ type LoginRequest struct {
 
 type LoginResponse struct {
 	Token string `json:"token"`
+	Role  string `json:"role"`
 }
 
 type UserInfo struct {
@@ -36,14 +37,14 @@ type Student struct {
 
 type HostelOwner struct {
 	gorm.Model
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	OwnerName string    `json:"ownername"`
-	BOD       time.Time `json:"bod"`
-	Address   string    `json:"address"`
-	PhoneNo   string    `json:"phoneno"`
-	NIC       string    `json:"nic"`
-	Image     string    `json:"image"`
-	UserID    uint      `json:"userid"`
+	ID        uint   `gorm:"primaryKey" json:"id"`
+	OwnerName string `json:"ownername"`
+	BOD       string `json:"bod"`
+	Address   string `json:"address"`
+	PhoneNo   string `json:"phoneno"`
+	NIC       string `json:"nic"`
+	Image     string `json:"image"`
+	UserID    uint   `json:"userid"`
 }
 
 type Hostel struct {
@@ -119,14 +120,14 @@ type StudentSingup struct {
 }
 
 type HostelOwnerSingup struct {
-	OwnerName string    `json:"ownername"`
-	BOD       time.Time `json:"bod"`
-	Address   string    `json:"address"`
-	PhoneNo   string    `json:"phoneno"`
-	NIC       string    `json:"nic"`
-	Email     string    `json:"email"`
-	Password  string    `json:"password"`
-	Image     string    `json:"image"`
+	OwnerName string `json:"ownername"`
+	BOD       string `json:"bod"`
+	Address   string `json:"address"`
+	PhoneNo   string `json:"phoneno"`
+	NIC       string `json:"nic"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	Image     string `json:"image"`
 }
 
 type HostelReg struct {

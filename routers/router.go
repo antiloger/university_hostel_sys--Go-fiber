@@ -15,9 +15,17 @@ func RegisterRoutes(App *fiber.App) {
 
 	App.Get("/", handler.Hello)
 	App.Post("/login", handler.Login)
+	home := App.Group("/home")
+
+	home.Get("/", handler.HomeLoad)
+	home.Get("/search/:search", handler.SearchHostel)
+	hostel_route := App.Group("/hostel")
 
 	owner_route.Post("/signup", handler.Hostelownersignup)
 	student_route.Post("/signup", handler.Studentsignup)
+	hostel_route.Post("/signup", handler.Hostelcreate)
+
+	home.Get("/getmyprofile", handler.GetMyProfile)
 
 	// jwt middleware
 
@@ -25,18 +33,12 @@ func RegisterRoutes(App *fiber.App) {
 		SigningKey: jwtware.SigningKey{Key: []byte(config.Jwt_Secret)},
 	}))
 
-	home := App.Group("/home")
-	hostel_route := App.Group("/hostel")
-
 	// home routes
-	home.Get("/", handler.HomeLoad)
-	home.Get("/search", handler.SearchHostel)
 
 	// owner routes
 	owner_route.Get("/:ID", handler.HostelOwnerView)
 
 	// hostel routes
-	hostel_route.Post("/signup", handler.Hostelcreate)
 	hostel_route.Get("/:ID", handler.Hosteldetails)
 	hostel_route.Put("/:ID", handler.Hostelupdate)
 	hostel_route.Delete("/:ID", handler.Hosteldelete)

@@ -1,8 +1,11 @@
 package database
 
 import (
+	"bufio"
+	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/antiloger/nhostel-go/models"
 	"gorm.io/driver/postgres"
@@ -17,8 +20,41 @@ type DBintance struct {
 var DB DBintance
 
 func Connect() {
-	//fmt.Print("dbf")
-	dsn := "host=localhost user=postgres password=7913knp7913 dbname=test1 port=5433 sslmode=disable TimeZone=Asia/Shanghai"
+	// Create a new reader, assuming input will be provided via the standard input device (os.Stdin)
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Println("Enter database host:")
+	host, _ := reader.ReadString('\n')
+
+	fmt.Println("Enter database user:")
+	user, _ := reader.ReadString('\n')
+
+	fmt.Println("Enter database password:")
+	password, _ := reader.ReadString('\n')
+
+	fmt.Println("Enter database name:")
+	dbname, _ := reader.ReadString('\n')
+
+	fmt.Println("Enter database port:")
+	port, _ := reader.ReadString('\n')
+
+	fmt.Println("Enter database ssl mode:")
+	sslmode, _ := reader.ReadString('\n')
+
+	fmt.Println("Enter database TimeZone:")
+	timeZone, _ := reader.ReadString('\n')
+
+	// Remove the newline character from the input strings
+	host = strings.TrimSpace(host)
+	user = strings.TrimSpace(user)
+	password = strings.TrimSpace(password)
+	dbname = strings.TrimSpace(dbname)
+	port = strings.TrimSpace(port)
+	sslmode = strings.TrimSpace(sslmode)
+	timeZone = strings.TrimSpace(timeZone)
+
+	// Construct the DSN using formatted strings
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s", host, user, password, dbname, port, sslmode, timeZone)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})

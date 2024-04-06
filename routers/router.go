@@ -1,9 +1,7 @@
 package routers
 
 import (
-	"github.com/antiloger/nhostel-go/config"
 	"github.com/antiloger/nhostel-go/handler"
-	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -26,12 +24,14 @@ func RegisterRoutes(App *fiber.App) {
 	hostel_route.Post("/signup", handler.Hostelcreate)
 
 	home.Get("/getmyprofile", handler.GetMyProfile)
-
+	warden_route.Get("/getwardenprofile/:ID", handler.Getwardendetails)
+	warden_route.Get("/hostelapprovaltable", handler.HostelApproveTable)
+	warden_route.Put("/hostelapproval/:ID", handler.HostelApprove)
 	// jwt middleware
 
-	App.Use(jwtware.New(jwtware.Config{
-		SigningKey: jwtware.SigningKey{Key: []byte(config.Jwt_Secret)},
-	}))
+	// App.Use(jwtware.New(jwtware.Config{
+	// 	SigningKey: jwtware.SigningKey{Key: []byte(config.Jwt_Secret)},
+	// }))
 
 	// home routes
 
@@ -45,8 +45,6 @@ func RegisterRoutes(App *fiber.App) {
 	hostel_route.Put("/available/:ID", handler.HostelAvailableUpdate)
 
 	// wardens routes
-	warden_route.Get("/hostelapprovaltable", handler.HostelApproveTable)
-	warden_route.Put("/hostelapproval/:ID", handler.HostelApprove)
 
 	// admin routes
 	admin_route.Get("/studentapprovaltable", handler.StudentApproveTable)

@@ -53,6 +53,7 @@ func Login(c *fiber.Ctx) error {
 	return c.JSON(models.LoginResponse{
 		Token: t,
 		Role:  user.Role,
+		ID:    user.ID,
 	})
 }
 
@@ -136,7 +137,7 @@ func Studentsignup(c *fiber.Ctx) error {
 		Email:    student_sign.Email,
 		Password: student_sign.Password,
 		Role:     "student",
-		Approved: false,
+		Approved: true,
 	}
 
 	if err := db.Create(&user).Error; err != nil {
@@ -219,20 +220,20 @@ func Hostelownersignup(c *fiber.Ctx) error {
 
 func HostelOwnerView(c *fiber.Ctx) error {
 	db := database.DB.Db
-	id := c.Params("ID")
+	user_id := c.Params("ID") // this id is from user_infos table
 	owner := models.HostelOwner{}
 
-	if err := db.Where("id = ?", id).First(&owner).Error; err != nil {
+	if err := db.Where("user_id = ?", user_id).First(&owner).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not find the hostel owner", "data": err})
 	}
 
 	user := models.UserInfo{}
-	if err := db.Where("id = ?", owner.UserID).First(&user).Error; err != nil {
+	if err := db.Where("id = ?", user_id).First(&user).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not find the user", "data": err})
 	}
 
 	hostel := []models.Hostel{}
-	if err := db.Where("owner_id = ?", id).Find(&hostel).Error; err != nil {
+	if err := db.Where("owner_id = ?", owner.ID).Find(&hostel).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not find the hostels", "data": err})
 	}
 
@@ -263,7 +264,7 @@ func Wardensignup(c *fiber.Ctx) error {
 		Email:    warden_sign.Email,
 		Password: warden_sign.Password,
 		Role:     "warden",
-		Approved: false,
+		Approved: true,
 	}
 
 	if err := db.Create(&user).Error; err != nil {
@@ -650,10 +651,10 @@ func DeleteArticle(c *fiber.Ctx) error {
 func GetMyProfile(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-
+	fmt.Print(tokenString)
 	userID, role, err := util.ValidateTokenAndExtractClaims(tokenString)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid or expired JWT"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid or expired JWT", "data": err})
 	}
 
 	if role == "hostelowner" {
@@ -667,7 +668,7 @@ func GetMyProfile(c *fiber.Ctx) error {
 	} else if role == "warden" {
 		db := database.DB.Db
 		warden := models.Warden{}
-		if err := db.Table("wardens").Joins("INNER JOIN user_infos ON warden.user_id = user_infos.id").Where("user_infos.id = ?", userID).First(&warden).Error; err != nil {
+		if err := db.Table("wardens").Joins("INNER JOIN user_infos ON wardens.user_id = user_infos.id").Where("user_infos.id = ?", userID).First(&warden).Error; err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not find the warden", "data": err})
 		}
 
@@ -678,4 +679,28 @@ func GetMyProfile(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid role"})
 	}
 
+}
+
+func Getwardendetails(c *fiber.Ctx) error {
+	db := database.DB.Db
+	warden := models.WardenSingup{}
+	war_user := models.UserInfo{}
+	war_info := models.Warden{}
+	user_id := c.Params("ID")
+
+	if err := db.Table("user_infos").Where("id = ?", user_id).First(&war_user).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not find the warden user", "data": err})
+	}
+
+	if err := db.Table("wardens").Where("user_id = ?", user_id).First(&war_info).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not find the warden info", "data": err})
+	}
+
+	warden.Email = war_user.Email
+	warden.WardenName = war_info.WardenName
+	warden.PhoneNo = war_info.PhoneNo
+	warden.NIC = war_info.NIC
+	warden.Image = war_info.Image
+
+	return c.JSON(fiber.Map{"status": "success", "message": "warden has found", "data": warden})
 }

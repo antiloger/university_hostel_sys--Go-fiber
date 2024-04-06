@@ -2,14 +2,14 @@ package util
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/antiloger/nhostel-go/config"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte(config.Jwt_Secret) // Assuming your secret key is stored in the config
+var jwtSecret = []byte(config.Jwt_Secret)
 
-// ValidateTokenAndExtractClaims takes a JWT token as input and returns the user ID, role, and error
 func ValidateTokenAndExtractClaims(tokenString string) (userID string, role string, err error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -27,14 +27,18 @@ func ValidateTokenAndExtractClaims(tokenString string) (userID string, role stri
 		return "", "", errors.New("invalid token claims")
 	}
 
-	userID, ok = claims["user_id"].(string)
-	if !ok {
-		return "", "", errors.New("user_id claim missing")
+	// Handling `id` which might be unmarshalled as float64
+	if idFloat, ok := claims["id"].(float64); ok {
+		userID = strconv.Itoa(int(idFloat)) // Convert float64 to int to string
+	} else {
+		return "", "", errors.New("user_id claim missing or not a number")
 	}
 
-	role, ok = claims["role"].(string)
-	if !ok {
-		return "", "", errors.New("role claim missing")
+	// Handling `role` which is expected to be a string
+	if roleVal, ok := claims["role"].(string); ok {
+		role = roleVal
+	} else {
+		return "", "", errors.New("role claim missing or not a string")
 	}
 
 	return userID, role, nil

@@ -244,6 +244,7 @@ func HostelOwnerView(c *fiber.Ctx) error {
 		PhoneNo:   owner.PhoneNo,
 		Email:     user.Email,
 		Approved:  user.Approved,
+		Image:     owner.Image,
 		Hostels:   hostel,
 	}
 
@@ -258,6 +259,21 @@ func Wardensignup(c *fiber.Ctx) error {
 	err := c.BodyParser(warden_sign)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Somthing's wrong with your input", "data": err})
+	}
+
+	image, err := c.FormFile("image")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"status": "error", "message": "could not get the image", "data": err})
+	}
+
+	if image.Size > 0 {
+		imagename := "./uploads/warden" + warden_sign.WardenName + image.Filename
+
+		if err := c.SaveFile(image, imagename); err != nil {
+			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "could not save the image", "data": err})
+		}
+
+		warden_sign.Image = imagename
 	}
 
 	user := models.UserInfo{
@@ -315,7 +331,8 @@ func Hostelcreate(c *fiber.Ctx) error {
 	hostel := models.Hostel{
 		HostelName:   hostel_reg.HostelName,
 		Address:      hostel_reg.Address,
-		Location:     hostel_reg.Location,
+		Lat:          hostel_reg.Lat,
+		Lng:          hostel_reg.Lng,
 		PhoneNo:      hostel_reg.PhoneNo,
 		Image1:       hostel_reg.Image1,
 		Image2:       hostel_reg.Image2,
@@ -388,7 +405,8 @@ func Hostelupdate(c *fiber.Ctx) error {
 
 	hostel.HostelName = hostelreg.HostelName
 	hostel.Address = hostelreg.Address
-	hostel.Location = hostelreg.Location
+	hostel.Lat = hostelreg.Lat
+	hostel.Lng = hostelreg.Lng
 	hostel.PhoneNo = hostelreg.PhoneNo
 	hostel.Image1 = hostelreg.Image1
 	hostel.Image2 = hostelreg.Image2
@@ -474,21 +492,20 @@ func HostelApproveTable(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"status": "success", "message": "hostels has found", "data": hostels})
 }
 
-func HostelOwnerApproveTable(c *fiber.Ctx) error {
+func Hostelownertable(c *fiber.Ctx) error {
 	db := database.DB.Db
-
 	owners := []models.HostelOwner{}
-	if err := db.Table("hostel_owners").Joins("INNER JOIN user_infos ON hostel_owners.user_id = user_infos.id").Where("user_infos.approved = ?", false).Find(&owners).Error; err != nil {
+	if err := db.Find(&owners).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not find the hostel owners", "data": err})
 	}
+
 	return c.JSON(fiber.Map{"status": "success", "message": "hostel owners has found", "data": owners})
 }
 
-func StudentApproveTable(c *fiber.Ctx) error {
+func StudentTable(c *fiber.Ctx) error {
 	db := database.DB.Db
-
 	students := []models.Student{}
-	if err := db.Table("students").Joins("INNER JOIN user_infos ON students.user_id = user_infos.id").Where("user_infos.approved = ?", false).Find(&students).Error; err != nil {
+	if err := db.Find(&students).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not find the students", "data": err})
 	}
 
@@ -678,7 +695,6 @@ func GetMyProfile(c *fiber.Ctx) error {
 	} else {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid role"})
 	}
-
 }
 
 func Getwardendetails(c *fiber.Ctx) error {
@@ -703,4 +719,16 @@ func Getwardendetails(c *fiber.Ctx) error {
 	warden.Image = war_info.Image
 
 	return c.JSON(fiber.Map{"status": "success", "message": "warden has found", "data": warden})
+}
+
+func WardenTable(c *fiber.Ctx) error {
+	db := database.DB.Db
+	wardens := []models.Warden{}
+
+	if err := db.Find(&wardens).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "error", "message": "could not find the wardens", "data": err})
+	}
+
+	return c.JSON(fiber.Map{"status": "success", "message": "wardens has found", "data": wardens})
+
 }

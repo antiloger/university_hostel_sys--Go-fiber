@@ -28,12 +28,12 @@ type UserInfo struct {
 
 type Student struct {
 	gorm.Model
-	ID      uint      `gorm:"primaryKey" json:"id"`
-	StdName string    `json:"stdname"`
-	BOD     time.Time `json:"bod"`
-	Batch   string    `json:"batch"`
-	StdNo   string    `json:"stdno"`
-	UserID  uint      `json:"userid"`
+	ID      uint   `gorm:"primaryKey" json:"id"`
+	StdName string `json:"stdname"`
+	BOD     string `json:"bod"`
+	Batch   string `json:"batch"`
+	StdNo   string `json:"stdno"`
+	UserID  uint   `json:"userid"`
 }
 
 type HostelOwner struct {
@@ -53,7 +53,8 @@ type Hostel struct {
 	ID           uint      `gorm:"primaryKey" json:"id"`
 	HostelName   string    `json:"hostelname"`
 	Address      string    `json:"address"`
-	Location     string    `json:"location"`
+	Lat          float64   `json:"lat"`
+	Lng          float64   `json:"lng"`
 	PhoneNo      string    `json:"phoneno"`
 	Image1       string    `json:"image1"`
 	Image2       string    `json:"image2"`
@@ -104,20 +105,18 @@ type Article struct {
 	ID          uint   `gorm:"primaryKey" json:"id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	PostedAt    string `json:"postedat"`
-	PostedBy    string `json:"postedby"`
 }
 
 // internal struct
 
 type StudentSingup struct {
-	StdName  string    `json:"stdname"`
-	BOD      time.Time `json:"bod"`
-	Batch    string    `json:"batch"`
-	StdNo    string    `json:"stdno"`
-	Email    string    `json:"email"`
-	Password string    `json:"password"`
-	StdPno   string    `json:"stdpno"`
+	StdName  string `json:"stdname"`
+	BOD      string `json:"bod"`
+	Batch    string `json:"batch"`
+	StdNo    string `json:"stdno"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	StdPno   string `json:"stdpno"`
 }
 
 type HostelOwnerSingup struct {
@@ -134,7 +133,8 @@ type HostelOwnerSingup struct {
 type HostelReg struct {
 	HostelName  string  `json:"hostelname"`
 	Address     string  `json:"address"`
-	Location    string  `json:"location"`
+	Lat         float64 `json:"lat"`
+	Lng         float64 `json:"lng"`
 	PhoneNo     string  `json:"phoneno"`
 	Image1      string  `json:"image1"`
 	Image2      string  `json:"image2"`
@@ -154,6 +154,7 @@ type OwnerView struct {
 	PhoneNo   string   `json:"phoneno"`
 	Email     string   `json:"email"`
 	Approved  bool     `json:"approved"`
+	Image     string   `json:"image"`
 	Hostels   []Hostel `json:"hostels"`
 }
 

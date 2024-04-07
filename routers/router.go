@@ -22,6 +22,7 @@ func RegisterRoutes(App *fiber.App) {
 	owner_route.Post("/signup", handler.Hostelownersignup)
 	student_route.Post("/signup", handler.Studentsignup)
 	hostel_route.Post("/signup", handler.Hostelcreate)
+	warden_route.Post("/signup", handler.Wardensignup)
 
 	home.Get("/getmyprofile", handler.GetMyProfile)
 	warden_route.Get("/getwardenprofile/:ID", handler.Getwardendetails)
@@ -38,6 +39,8 @@ func RegisterRoutes(App *fiber.App) {
 	// owner routes
 	owner_route.Get("/:ID", handler.HostelOwnerView)
 
+	warden_route.Get("/wardentable", handler.WardenTable)
+
 	// hostel routes
 	hostel_route.Get("/:ID", handler.Hosteldetails)
 	hostel_route.Put("/:ID", handler.Hostelupdate)
@@ -47,10 +50,10 @@ func RegisterRoutes(App *fiber.App) {
 	// wardens routes
 
 	// admin routes
-	admin_route.Get("/studentapprovaltable", handler.StudentApproveTable)
+	admin_route.Get("/studentapprovaltable", handler.StudentTable)
 	admin_route.Put("/studentapproval/:ID", handler.StudentApprove)
 
-	admin_route.Get("/ownerapprovaltable", handler.HostelOwnerApproveTable)
+	admin_route.Get("/ownertable", handler.Hostelownertable)
 	admin_route.Put("/ownerapproval/:ID", handler.OwnerApprove)
 
 	admin_route.Post("/addarticle", handler.CreateArticle)
